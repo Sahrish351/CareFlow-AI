@@ -119,10 +119,10 @@ export const HospitalsDiscoveryPage: React.FC = () => {
         <div className="max-w-7xl mx-auto space-y-4 relative z-10">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-500/20 text-teal-300 text-xs font-semibold border border-teal-500/30">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>Verified Healthcare Facilities</span>
+            <span>Pakistan Reference Network</span>
           </div>
           <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight">
-            Explore Partner Hospitals & Medical Institutes
+            Explore Reference Hospitals & Medical Centers
           </h1>
           <p className="text-slate-300 text-xs sm:text-sm max-w-2xl leading-relaxed">
             Connected multi-hospital directory offering outpatient clinical specialty wards, emergency resuscitation units, and real-time appointment scheduling.
@@ -166,7 +166,7 @@ export const HospitalsDiscoveryPage: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-6">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-bold text-slate-700 uppercase tracking-wider">
-            Showing {filteredHospitals.length} Verified Hospitals
+            Showing {filteredHospitals.length} Reference Hospitals
           </h2>
         </div>
 

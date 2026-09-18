@@ -174,7 +174,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const newDoc = {
             id: `doc-${Date.now()}`,
             profile_id: userId,
-            hospital_id: extra?.hospitalId || 'hosp-lahore-1',
+            hospital_id: extra?.hospitalId || 'hosp-skmch-lhr',
             specialty: extra?.specialty || 'General Medicine',
             bio: extra?.bio || 'Newly registered specialist undergoing clinical review.',
             experience_years: extra?.experienceYears || 5,

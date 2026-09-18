@@ -41,7 +41,7 @@ import {
 
 // Local reactive storage keys for state persistence (v3 incorporates 8 Pakistani reference hospitals, synthetic doctors & Care Passport)
 const STORAGE_KEYS = {
-  HOSPITALS: 'careflow_hospitals_pk_v3',
+  HOSPITALS: 'careflow_hospitals_pk_v4',
   DEPARTMENTS: 'careflow_departments_pk_v3',
   DOCTORS: 'careflow_doctors_pk_v3',
   APPOINTMENTS: 'careflow_appointments_pk_v3',
@@ -121,6 +121,8 @@ export const dbService = {
       }
     }
     let hospitals = getStored<Hospital[]>(STORAGE_KEYS.HOSPITALS, INITIAL_HOSPITALS);
+    // Guarantee 100% deduplication of hospitals
+    hospitals = hospitals.filter(h => !h.id.startsWith('hosp-lahore-') && !h.id.startsWith('hosp-isb-') && !h.id.startsWith('hosp-rwp-') && !h.id.startsWith('hosp-khi-'));
     if (filters?.city && filters.city !== 'All') {
       const cityLower = filters.city.toLowerCase().trim();
       hospitals = hospitals.filter(h => h.city.toLowerCase().includes(cityLower));
