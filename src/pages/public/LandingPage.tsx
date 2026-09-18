@@ -334,58 +334,60 @@ export const LandingPage: React.FC = () => {
       {/* -------------------------------------------------------------
           2. HERO SECTION WITH PROMINENT AI CARE SEARCH
       -------------------------------------------------------------- */}
-      <section id="care-search" className="relative pt-32 pb-20 md:pt-40 md:pb-24 overflow-hidden">
+      <section id="care-search" className="relative pt-24 pb-14 sm:pt-32 sm:pb-20 md:pt-38 md:pb-24 overflow-hidden">
         {/* Subtle decorative mesh background glow */}
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[400px] bg-gradient-to-tr from-teal-100/40 via-sky-100/30 to-purple-100/20 rounded-full blur-3xl pointer-events-none -z-10" />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-3xl mx-auto space-y-5">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-teal-50 border border-teal-200/80 text-teal-900 text-xs font-semibold shadow-2xs">
-              <Sparkles className="w-3.5 h-3.5 text-teal-600" />
+          <div className="text-center max-w-3xl mx-auto space-y-4 sm:space-y-5">
+            <div className="inline-flex items-center gap-2 px-3 sm:px-3.5 py-1 sm:py-1.5 rounded-full bg-teal-50 border border-teal-200/80 text-teal-900 text-[11px] sm:text-xs font-semibold shadow-2xs">
+              <Sparkles className="w-3.5 h-3.5 text-teal-600 shrink-0" />
               <span>Multi-Hospital Healthcare Navigation • 23+ Specialties</span>
             </div>
 
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-slate-950 tracking-tight leading-[1.1]">
-              Find the right care. <br />
-              <span className="bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-500 bg-clip-text text-transparent">
+            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold text-slate-950 tracking-tight leading-[1.15] sm:leading-[1.1] px-1">
+              Find the right care. <br className="hidden sm:inline" />
+              <span className="bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-500 bg-clip-text text-transparent block sm:inline">
                 Book with confidence.
               </span>
             </h1>
 
-            <p className="text-base sm:text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed font-normal">
+            <p className="text-xs sm:text-base md:text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed font-normal px-2">
               Tell us what you need. We'll help you find the right care across Pakistan's premier reference hospitals and specialist doctors.
             </p>
 
             {/* Main Interactive AI Care Search Bar */}
-            <div className="pt-4 max-w-2xl mx-auto">
+            <div className="pt-2 sm:pt-4 max-w-2xl mx-auto">
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
                   executeAiSearch(searchQuery);
                 }}
-                className="relative bg-white rounded-2xl sm:rounded-3xl p-2 sm:p-2.5 shadow-xl border border-slate-200/90 flex items-center gap-2 focus-within:ring-3 focus-within:ring-teal-500/20 focus-within:border-teal-500 transition-all"
+                className="relative bg-white rounded-2xl sm:rounded-3xl p-2 sm:p-2.5 shadow-xl border border-slate-200/90 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 focus-within:ring-3 focus-within:ring-teal-500/20 focus-within:border-teal-500 transition-all"
               >
-                <div className="pl-3 text-teal-600">
-                  <Search className="w-5 h-5" />
+                <div className="flex items-center gap-2 flex-1 pl-2 sm:pl-3 pr-1 py-1 sm:py-0">
+                  <div className="text-teal-600 shrink-0">
+                    <Search className="w-4 h-4 sm:w-5 sm:h-5" />
+                  </div>
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="I have back pain and need a doctor tomorrow afternoon."
+                    className="flex-1 min-w-0 bg-transparent py-1.5 sm:py-2 px-1 text-xs sm:text-sm text-slate-800 placeholder-slate-400 outline-hidden font-medium"
+                  />
+                  <VoiceSearchButton
+                    onTranscript={(transcript) => {
+                      setSearchQuery(transcript);
+                      executeAiSearch(transcript);
+                    }}
+                    className="shrink-0"
+                  />
                 </div>
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="I have back pain and need a doctor tomorrow afternoon."
-                  className="flex-1 bg-transparent py-2 px-2 text-xs sm:text-sm text-slate-800 placeholder-slate-400 outline-hidden font-medium"
-                />
-                <VoiceSearchButton
-                  onTranscript={(transcript) => {
-                    setSearchQuery(transcript);
-                    executeAiSearch(transcript);
-                  }}
-                  className="shrink-0"
-                />
                 <button
                   type="submit"
                   disabled={isSearching}
-                  className="px-5 py-3 rounded-xl sm:rounded-2xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-teal-600/20 transition-all flex items-center gap-2 shrink-0 cursor-pointer disabled:opacity-70"
+                  className="w-full sm:w-auto px-5 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-teal-600/20 transition-all flex items-center justify-center gap-2 shrink-0 cursor-pointer disabled:opacity-70"
                 >
                   {isSearching ? (
                     <>
@@ -402,24 +404,28 @@ export const LandingPage: React.FC = () => {
               </form>
 
               {/* Quick Prompt Chips */}
-              <div className="flex flex-wrap items-center justify-center gap-2 pt-3 text-xs">
-                <span className="text-slate-400 font-medium">Try asking (English / Roman Urdu):</span>
-                {[
-                  { label: '🇵🇰 Lahore Cardiologist kal', query: 'Mujhe Lahore mein cardiologist chahiye kal dopehr' },
-                  { label: '🇵🇰 Islamabad Child Doctor', query: 'My daughter has high fever, need pediatrician in Islamabad' },
-                  { label: '🇵🇰 Karachi Skin Specialist', query: 'Need a dermatologist in Karachi for skin rash and acne' },
-                  { label: '🚨 Chest Pain (Emergency)', query: 'Severe crushing chest pain and shortness of breath' },
-                  { label: '🦴 Kamar dard (Orthopedics)', query: 'Mujhe kamar dard hai aur doctor chahiye Lahore mein' },
-                ].map((chip, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => executeAiSearch(chip.query)}
-                    className="px-3 py-1 rounded-full bg-slate-100 hover:bg-teal-50 hover:text-teal-700 text-slate-600 text-[11px] font-medium transition-colors border border-slate-200/60 cursor-pointer"
-                  >
-                    {chip.label}
-                  </button>
-                ))}
+              <div className="pt-3.5 space-y-2">
+                <p className="text-[11px] sm:text-xs text-slate-400 font-medium text-center">
+                  Try asking (English / Roman Urdu):
+                </p>
+                <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 text-xs">
+                  {[
+                    { label: '🇵🇰 Lahore Cardiologist kal', query: 'Mujhe Lahore mein cardiologist chahiye kal dopehr' },
+                    { label: '🇵🇰 Islamabad Child Doctor', query: 'My daughter has high fever, need pediatrician in Islamabad' },
+                    { label: '🇵🇰 Karachi Skin Specialist', query: 'Need a dermatologist in Karachi for skin rash and acne' },
+                    { label: '🚨 Chest Pain (Emergency)', query: 'Severe crushing chest pain and shortness of breath' },
+                    { label: '🦴 Kamar dard (Orthopedics)', query: 'Mujhe kamar dard hai aur doctor chahiye Lahore mein' },
+                  ].map((chip, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => executeAiSearch(chip.query)}
+                      className="px-2.5 sm:px-3 py-1 rounded-full bg-slate-100 hover:bg-teal-50 hover:text-teal-700 text-slate-600 text-[10px] sm:text-[11px] font-medium transition-colors border border-slate-200/60 cursor-pointer shadow-2xs"
+                    >
+                      {chip.label}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
