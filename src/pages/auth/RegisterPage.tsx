@@ -25,8 +25,6 @@ export const RegisterPage: React.FC = () => {
   const { user, role, signUp } = useAuth();
   const navigate = useNavigate();
 
-  const [selectedRole, setSelectedRole] = useState<'patient' | 'doctor'>('patient');
-
   // Common fields
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -35,16 +33,6 @@ export const RegisterPage: React.FC = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
-  // Patient specific fields
-  const [dateOfBirth, setDateOfBirth] = useState('');
-  const [gender, setGender] = useState('Male');
-
-  // Doctor specific fields
-  const [specialty, setSpecialty] = useState('Cardiology');
-  const [experienceYears, setExperienceYears] = useState(5);
-  const [hospitalId, setHospitalId] = useState(INITIAL_HOSPITALS[0].id);
-  const [bio, setBio] = useState('');
-
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -52,7 +40,9 @@ export const RegisterPage: React.FC = () => {
   useEffect(() => {
     if (user) {
       if (role === 'doctor') navigate('/doctor/dashboard', { replace: true });
-      else if (role === 'admin') navigate('/admin/dashboard', { replace: true });
+      else if (role === 'receptionist') navigate('/receptionist/dashboard', { replace: true });
+      else if (role === 'hospital_admin') navigate('/hospital-admin/dashboard', { replace: true });
+      else if (role === 'super_admin' || role === 'admin') navigate('/admin/dashboard', { replace: true });
       else navigate('/patient/dashboard', { replace: true });
     }
   }, [user, role, navigate]);
@@ -76,23 +66,9 @@ export const RegisterPage: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      if (selectedRole === 'patient') {
-        await signUp(email, password, fullName, 'patient', {
-          phone,
-          dateOfBirth,
-          gender
-        });
-        navigate('/patient/dashboard');
-      } else {
-        await signUp(email, password, fullName, 'doctor', {
-          phone,
-          specialty,
-          experienceYears: Number(experienceYears),
-          hospitalId,
-          bio: bio || `Board-certified ${specialty} specialist with ${experienceYears} years of clinical experience.`
-        });
-        navigate('/doctor/dashboard');
-      }
+      // Public self-registration strictly creates Patient accounts
+      await signUp(email, password, fullName, phone);
+      navigate('/patient/dashboard');
     } catch (err: any) {
       setError(err?.message || 'Registration failed. Please try again.');
     } finally {
@@ -182,42 +158,16 @@ export const RegisterPage: React.FC = () => {
             </p>
           </div>
 
-          {/* Role Switcher Tabs */}
-          <div className="grid grid-cols-2 gap-2 p-1.5 bg-slate-100 rounded-2xl">
-            <button
-              type="button"
-              onClick={() => setSelectedRole('patient')}
-              className={`py-2.5 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
-                selectedRole === 'patient'
-                  ? 'bg-white text-teal-900 shadow-xs ring-1 ring-slate-200/80'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <UserCheck className="w-4 h-4 text-teal-600" />
-              <span>I'm a Patient</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setSelectedRole('doctor')}
-              className={`py-2.5 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
-                selectedRole === 'doctor'
-                  ? 'bg-white text-teal-900 shadow-xs ring-1 ring-slate-200/80'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <Stethoscope className="w-4 h-4 text-blue-600" />
-              <span>I'm a Doctor</span>
-            </button>
-          </div>
-
-          {selectedRole === 'doctor' && (
-            <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-900 flex items-start gap-2.5">
-              <ShieldCheck className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
-              <span>
-                <strong>Clinical Oversight Notice:</strong> New physician accounts are placed in <em>Pending Verification</em> until approved by a hospital administrator.
-              </span>
+          {/* Patient Account Notice */}
+          <div className="p-4 bg-teal-50/80 rounded-2xl border border-teal-200/90 flex items-start gap-3">
+            <UserCheck className="w-5 h-5 text-teal-700 shrink-0 mt-0.5" />
+            <div className="text-xs text-teal-950">
+              <p className="font-bold text-teal-900">Patient Self-Registration Portal</p>
+              <p className="mt-0.5 text-teal-800">
+                Public registration grants personal health passport & appointment booking privileges. Doctor and hospital staff credentials are provisioned by hospital administration.
+              </p>
             </div>
-          )}
+          </div>
 
           {error && (
             <div className="p-3 rounded-xl bg-rose-50 border border-rose-100 flex items-center gap-2 text-rose-700 text-xs">
@@ -230,7 +180,7 @@ export const RegisterPage: React.FC = () => {
           <form onSubmit={handleSubmit} className="space-y-4 text-xs">
             <div>
               <label className="font-bold text-slate-700 block mb-1">
-                {selectedRole === 'doctor' ? 'Full Doctor Name & Title' : 'Full Name'}
+                Full Name
               </label>
               <div className="relative">
                 <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -238,7 +188,7 @@ export const RegisterPage: React.FC = () => {
                   type="text"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  placeholder={selectedRole === 'doctor' ? 'e.g. Dr. Sarah Farooq, FCPS' : 'e.g. Tariq Mehmood'}
+                  placeholder="e.g. Tariq Mehmood"
                   className="w-full pl-10 pr-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 outline-hidden"
                   required
                 />
@@ -275,77 +225,6 @@ export const RegisterPage: React.FC = () => {
                 </div>
               </div>
             </div>
-
-            {/* Role-Specific Fields */}
-            {selectedRole === 'patient' ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="font-bold text-slate-700 block mb-1">Date of Birth</label>
-                  <div className="relative">
-                    <Calendar className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                    <input
-                      type="date"
-                      value={dateOfBirth}
-                      onChange={(e) => setDateOfBirth(e.target.value)}
-                      className="w-full pl-10 pr-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 outline-hidden"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="font-bold text-slate-700 block mb-1">Gender</label>
-                  <select
-                    value={gender}
-                    onChange={(e) => setGender(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 outline-hidden"
-                  >
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                    <option value="Other">Other</option>
-                  </select>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="font-bold text-slate-700 block mb-1">Medical Specialty</label>
-                    <select
-                      value={specialty}
-                      onChange={(e) => setSpecialty(e.target.value)}
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 outline-hidden"
-                    >
-                      {CARE_CATEGORIES.map(c => (
-                        <option key={c.id} value={c.name}>{c.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="font-bold text-slate-700 block mb-1">Years of Experience</label>
-                    <input
-                      type="number"
-                      min="1"
-                      max="60"
-                      value={experienceYears}
-                      onChange={(e) => setExperienceYears(Number(e.target.value))}
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 outline-hidden"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="font-bold text-slate-700 block mb-1">Primary Hospital Affiliation</label>
-                  <select
-                    value={hospitalId}
-                    onChange={(e) => setHospitalId(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 outline-hidden"
-                  >
-                    {INITIAL_HOSPITALS.map(h => (
-                      <option key={h.id} value={h.id}>{h.name} ({h.city})</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-            )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
@@ -391,7 +270,7 @@ export const RegisterPage: React.FC = () => {
               disabled={isSubmitting}
               className="w-full py-3 px-4 bg-teal-600 hover:bg-teal-700 text-white text-xs sm:text-sm font-bold rounded-xl shadow-xs hover:shadow transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 mt-2"
             >
-              {isSubmitting ? 'Registering...' : `Complete ${selectedRole === 'doctor' ? 'Doctor' : 'Patient'} Registration`}
+              {isSubmitting ? 'Creating Account...' : 'Complete Patient Registration'}
               <ArrowRight className="w-4 h-4" />
             </button>
           </form>

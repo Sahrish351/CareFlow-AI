@@ -1,13 +1,12 @@
 -- ==============================================================================
--- CareFlow AI — PostgreSQL Database Schema (5-Role RBAC & Scoped Architecture)
--- Single Source of Truth matching production migration
+-- CareFlow AI — Migration 01: Core Schema, 5-Role Model & Integrity Triggers
 -- ==============================================================================
 
--- Enable UUID & pgcrypto extensions
+-- 1. Enable required extensions
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
--- 1. HOSPITALS
+-- 2. Hospitals Table
 CREATE TABLE IF NOT EXISTS public.hospitals (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
@@ -25,7 +24,7 @@ CREATE TABLE IF NOT EXISTS public.hospitals (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- 2. DEPARTMENTS
+-- 3. Departments Table
 CREATE TABLE IF NOT EXISTS public.departments (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   hospital_id UUID NOT NULL REFERENCES public.hospitals(id) ON DELETE CASCADE,
@@ -38,7 +37,7 @@ CREATE TABLE IF NOT EXISTS public.departments (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- 3. PROFILES (5-Role Model: patient, doctor, receptionist, hospital_admin, super_admin)
+-- 4. User Profiles Table (Extends auth.users with 5 canonical roles + hospital scoping)
 CREATE TABLE IF NOT EXISTS public.profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   role TEXT NOT NULL DEFAULT 'patient' CHECK (role IN ('patient', 'doctor', 'receptionist', 'hospital_admin', 'super_admin')),
@@ -51,7 +50,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- 4. DOCTORS
+-- 5. Doctors Directory Table
 CREATE TABLE IF NOT EXISTS public.doctors (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   profile_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
@@ -68,7 +67,7 @@ CREATE TABLE IF NOT EXISTS public.doctors (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- 5. DOCTOR_SCHEDULES
+-- 6. Doctor Schedules Table
 CREATE TABLE IF NOT EXISTS public.doctor_schedules (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   doctor_id UUID NOT NULL REFERENCES public.doctors(id) ON DELETE CASCADE,
@@ -81,7 +80,7 @@ CREATE TABLE IF NOT EXISTS public.doctor_schedules (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- 6. APPOINTMENTS (Double-booking protection)
+-- 7. Appointments Table (With doctor slot uniqueness)
 CREATE TABLE IF NOT EXISTS public.appointments (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   patient_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
@@ -99,7 +98,7 @@ CREATE TABLE IF NOT EXISTS public.appointments (
   CONSTRAINT unique_doctor_slot UNIQUE (doctor_id, appointment_date, start_time)
 );
 
--- 7. QUEUES (Hospital-scoped)
+-- 8. Live Queues Table (Hospital Operations)
 CREATE TABLE IF NOT EXISTS public.queues (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   appointment_id UUID NOT NULL REFERENCES public.appointments(id) ON DELETE CASCADE,
@@ -116,7 +115,7 @@ CREATE TABLE IF NOT EXISTS public.queues (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- 8. PRESCRIPTIONS
+-- 9. Prescriptions Table
 CREATE TABLE IF NOT EXISTS public.prescriptions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   appointment_id UUID REFERENCES public.appointments(id) ON DELETE SET NULL,
@@ -131,7 +130,7 @@ CREATE TABLE IF NOT EXISTS public.prescriptions (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- 9. MEDICAL_DOCUMENTS
+-- 10. Medical Documents Table (Vault)
 CREATE TABLE IF NOT EXISTS public.medical_documents (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   patient_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
@@ -147,7 +146,7 @@ CREATE TABLE IF NOT EXISTS public.medical_documents (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- 10. CARE_PASSPORTS
+-- 11. Care Passports Table (Central Health Profile)
 CREATE TABLE IF NOT EXISTS public.care_passports (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   patient_id UUID NOT NULL UNIQUE REFERENCES public.profiles(id) ON DELETE CASCADE,
@@ -163,7 +162,7 @@ CREATE TABLE IF NOT EXISTS public.care_passports (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- 11. NOTIFICATIONS
+-- 12. Notifications Table
 CREATE TABLE IF NOT EXISTS public.notifications (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
@@ -175,7 +174,7 @@ CREATE TABLE IF NOT EXISTS public.notifications (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- 12. FAMILY_MEMBERS
+-- 13. Family Dependents Table
 CREATE TABLE IF NOT EXISTS public.family_members (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   primary_patient_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
@@ -188,21 +187,23 @@ CREATE TABLE IF NOT EXISTS public.family_members (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- ==============================================================================
--- INDEXES
--- ==============================================================================
+-- 14. Performance Indexes
 CREATE INDEX IF NOT EXISTS idx_profiles_role ON public.profiles(role);
 CREATE INDEX IF NOT EXISTS idx_profiles_hospital ON public.profiles(hospital_id);
 CREATE INDEX IF NOT EXISTS idx_departments_hospital ON public.departments(hospital_id);
 CREATE INDEX IF NOT EXISTS idx_doctors_hospital ON public.doctors(hospital_id);
+CREATE INDEX IF NOT EXISTS idx_doctors_profile ON public.doctors(profile_id);
 CREATE INDEX IF NOT EXISTS idx_appointments_patient ON public.appointments(patient_id);
 CREATE INDEX IF NOT EXISTS idx_appointments_doctor ON public.appointments(doctor_id);
 CREATE INDEX IF NOT EXISTS idx_appointments_hospital ON public.appointments(hospital_id);
 CREATE INDEX IF NOT EXISTS idx_queues_hospital_date ON public.queues(hospital_id, queue_date);
+CREATE INDEX IF NOT EXISTS idx_queues_patient ON public.queues(patient_id);
+CREATE INDEX IF NOT EXISTS idx_prescriptions_patient ON public.prescriptions(patient_id);
+CREATE INDEX IF NOT EXISTS idx_prescriptions_hospital ON public.prescriptions(hospital_id);
+CREATE INDEX IF NOT EXISTS idx_medical_docs_patient ON public.medical_documents(patient_id);
 
--- ==============================================================================
--- TRIGGERS: PUBLIC REGISTRATION & ANTI-ROLE ESCALATION
--- ==============================================================================
+-- 15. Security Trigger: Auto-Provision Patient Profile on auth.users Sign-Up
+-- Enforces that public self-registrations CAN ONLY BE 'patient'.
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -217,7 +218,7 @@ BEGIN
   )
   VALUES (
     NEW.id,
-    'patient',
+    'patient', -- Public signups are strictly forced to 'patient'
     NULL,
     COALESCE(NEW.raw_user_meta_data->>'full_name', 'CareFlow Patient'),
     NEW.email,
@@ -226,6 +227,7 @@ BEGIN
   )
   ON CONFLICT (id) DO NOTHING;
 
+  -- Also auto-initialize empty Care Passport for the new patient
   INSERT INTO public.care_passports (patient_id)
   VALUES (NEW.id)
   ON CONFLICT (patient_id) DO NOTHING;
@@ -234,19 +236,24 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+-- Bind trigger to auth.users
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
+-- 16. Security Trigger: Prevent Privilege Escalation
+-- Prevents non-super_admins from modifying their own role or hospital_id.
 CREATE OR REPLACE FUNCTION public.prevent_profile_role_escalation()
 RETURNS TRIGGER AS $$
 DECLARE
-  calling_role TEXT;
+  current_role TEXT;
 BEGIN
+  -- If role or hospital_id is being altered:
   IF (OLD.role IS DISTINCT FROM NEW.role) OR (OLD.hospital_id IS DISTINCT FROM NEW.hospital_id) THEN
-    SELECT role INTO calling_role FROM public.profiles WHERE id = auth.uid();
-    IF calling_role != 'super_admin' AND auth.role() != 'service_role' THEN
+    -- Check if calling user is super_admin or service_role
+    SELECT role INTO current_role FROM public.profiles WHERE id = auth.uid();
+    IF current_role != 'super_admin' AND auth.role() != 'service_role' THEN
       RAISE EXCEPTION 'Access Denied: You cannot modify your role or hospital assignment.';
     END IF;
   END IF;
@@ -258,19 +265,3 @@ DROP TRIGGER IF EXISTS trg_prevent_role_escalation ON public.profiles;
 CREATE TRIGGER trg_prevent_role_escalation
   BEFORE UPDATE ON public.profiles
   FOR EACH ROW EXECUTE FUNCTION public.prevent_profile_role_escalation();
-
--- ==============================================================================
--- ROW LEVEL SECURITY
--- ==============================================================================
-ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.hospitals ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.departments ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.doctors ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.doctor_schedules ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.appointments ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.queues ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.prescriptions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.medical_documents ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.care_passports ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.family_members ENABLE ROW LEVEL SECURITY;

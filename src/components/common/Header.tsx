@@ -11,7 +11,7 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
-  const { user, role, switchDemoRole, signOut } = useAuth();
+  const { user, role, signOut } = useAuth();
   const [showGlobalSearch, setShowGlobalSearch] = useState(false);
 
   useEffect(() => {
@@ -28,25 +28,26 @@ export const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
   return (
     <>
     <header className="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-slate-200 px-4 sm:px-6 py-3 flex items-center justify-between gap-4">
+      {/* Left: Mobile Menu & Logo */}
       <div className="flex items-center gap-3">
         <button
           onClick={onToggleSidebar}
-          className="lg:hidden p-2 rounded-xl hover:bg-slate-100 text-slate-600 transition-colors"
-          aria-label="Toggle menu"
+          className="md:hidden p-2 rounded-xl text-slate-500 hover:bg-slate-100 transition-colors"
+          title="Toggle Navigation Menu"
         >
           <Menu className="w-5 h-5" />
         </button>
 
-        <Link to="/" className="flex items-center gap-2 hover:opacity-90 transition-opacity">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-teal-600 to-teal-400 flex items-center justify-center text-white shadow-sm shadow-teal-500/30">
+        <Link to="/" className="flex items-center gap-2">
+          <div className="w-9 h-9 rounded-xl bg-teal-600 flex items-center justify-center text-white font-bold shadow-xs">
             <Activity className="w-5 h-5" />
           </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="font-bold text-slate-900 tracking-tight text-base">CareFlow</span>
-              <span className="text-[10px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-teal-100 text-teal-800 tracking-wider">AI</span>
+          <div className="hidden sm:block text-left">
+            <div className="flex items-center gap-1.5">
+              <span className="font-extrabold text-slate-900 tracking-tight text-base leading-none">CareFlow</span>
+              <span className="text-[10px] font-black uppercase px-1.5 py-0.5 rounded bg-teal-50 text-teal-700 border border-teal-200">AI</span>
             </div>
-            <p className="text-[11px] text-slate-500 hidden sm:block">Smart Hospital Navigation</p>
+            <span className="text-[10px] text-slate-400 font-medium">Healthcare Network</span>
           </div>
         </Link>
       </div>
@@ -61,28 +62,13 @@ export const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
         <kbd className="px-1.5 py-0.5 text-[10px] font-mono bg-white border border-slate-200 rounded text-slate-400">⌘K</kbd>
       </button>
 
-      {/* Center: Interactive Demo Role Switcher for seamless evaluation */}
-      <div className="hidden md:flex items-center bg-slate-100/90 p-1 rounded-xl border border-slate-200/80">
-        <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider px-2">Role:</span>
-        {(['patient', 'doctor', 'admin'] as UserRole[]).map((r) => {
-          const isActive = role === r;
-          return (
-            <button
-              key={r}
-              onClick={() => switchDemoRole(r)}
-              className={`px-3 py-1 text-xs font-semibold rounded-lg capitalize transition-all duration-150 flex items-center gap-1.5 ${
-                isActive
-                  ? 'bg-white text-teal-800 shadow-sm font-bold ring-1 ring-slate-200'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
-              }`}
-            >
-              {r === 'patient' && <UserCheck className="w-3.5 h-3.5 text-teal-600" />}
-              {r === 'doctor' && <Stethoscope className="w-3.5 h-3.5 text-blue-600" />}
-              {r === 'admin' && <ShieldCheck className="w-3.5 h-3.5 text-purple-600" />}
-              {r}
-            </button>
-          );
-        })}
+      {/* Center: Authorized Role Badge */}
+      <div className="hidden md:flex items-center bg-slate-100/90 py-1.5 px-3 rounded-xl border border-slate-200/80 gap-2">
+        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Active Role:</span>
+        <span className="inline-flex items-center gap-1.5 text-xs font-bold capitalize text-teal-900">
+          <ShieldCheck className="w-3.5 h-3.5 text-teal-600" />
+          {role.replace('_', ' ')}
+        </span>
       </div>
 
       {/* Right Side: Notifications & User Profile */}

@@ -1,10 +1,11 @@
 // CareFlow AI — Core Domain TypeScript Interfaces
 
-export type UserRole = 'patient' | 'doctor' | 'admin';
+export type UserRole = 'patient' | 'doctor' | 'receptionist' | 'hospital_admin' | 'super_admin' | 'admin';
 
 export interface Profile {
   id: string;
   role: UserRole;
+  hospital_id?: string | null;
   full_name: string;
   email: string;
   phone?: string | null;

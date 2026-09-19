@@ -12,6 +12,7 @@ import { DoctorsDiscoveryPage } from './pages/public/DoctorsDiscoveryPage';
 import { DoctorProfilePage } from './pages/public/DoctorProfilePage';
 import { AboutPage } from './pages/public/AboutPage';
 import { ServicesPage } from './pages/public/ServicesPage';
+import { UnauthorizedPage } from './pages/public/UnauthorizedPage';
 
 // Auth Pages
 import { LoginPage } from './pages/auth/LoginPage';
@@ -36,7 +37,11 @@ import { CarePassportPage } from './pages/patient/CarePassportPage';
 import { DoctorDashboard } from './pages/doctor/DoctorDashboard';
 import { DoctorSchedulePage } from './pages/doctor/DoctorSchedulePage';
 
+// Receptionist Pages
+import { ReceptionistDashboard } from './pages/receptionist/ReceptionistDashboard';
+
 // Admin Pages
+import { HospitalAdminDashboard } from './pages/admin/HospitalAdminDashboard';
 import { AdminDashboard } from './pages/admin/AdminDashboard';
 import { AdminAnalyticsPage } from './pages/admin/AdminAnalyticsPage';
 import { AdminDepartmentsPage } from './pages/admin/AdminDepartmentsPage';
@@ -44,13 +49,17 @@ import { AdminDoctorsPage } from './pages/admin/AdminDoctorsPage';
 import { AdminDoctorApprovalsPage } from './pages/admin/AdminDoctorApprovalsPage';
 import { AdminAppointmentsPage } from './pages/admin/AdminAppointmentsPage';
 
-// Portal & Dashboard Redirect for authenticated shortcut
+// Portal & Dashboard Redirect for authenticated role routing
 const PortalRedirect: React.FC = () => {
   const { user, role, loading } = useAuth();
   if (loading) return null;
-  if (!user) return <Navigate to="/login" state={{ message: 'Please log in to continue to your dashboard.' }} replace />;
+  if (!user) {
+    return <Navigate to="/login" state={{ message: 'Please log in to continue to your dashboard.' }} replace />;
+  }
   if (role === 'doctor') return <Navigate to="/doctor/dashboard" replace />;
-  if (role === 'admin') return <Navigate to="/admin/dashboard" replace />;
+  if (role === 'receptionist') return <Navigate to="/receptionist/dashboard" replace />;
+  if (role === 'hospital_admin') return <Navigate to="/hospital-admin/dashboard" replace />;
+  if (role === 'super_admin' || role === 'admin') return <Navigate to="/admin/dashboard" replace />;
   return <Navigate to="/patient/dashboard" replace />;
 };
 
@@ -67,6 +76,7 @@ export const App: React.FC = () => {
           <Route path="/doctors/:id" element={<DoctorProfilePage />} />
           <Route path="/services" element={<ServicesPage />} />
           <Route path="/about" element={<AboutPage />} />
+          <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
           {/* Public Auth Routes */}
           <Route path="/login" element={<LoginPage />} />
@@ -82,6 +92,8 @@ export const App: React.FC = () => {
           {/* Route Aliases */}
           <Route path="/patient-dashboard" element={<Navigate to="/patient/dashboard" replace />} />
           <Route path="/doctor-dashboard" element={<Navigate to="/doctor/dashboard" replace />} />
+          <Route path="/receptionist-dashboard" element={<Navigate to="/receptionist/dashboard" replace />} />
+          <Route path="/hospital-admin-dashboard" element={<Navigate to="/hospital-admin/dashboard" replace />} />
           <Route path="/admin-dashboard" element={<Navigate to="/admin/dashboard" replace />} />
           <Route path="/find-care" element={<Navigate to="/patient/ai-navigation" replace />} />
           <Route path="/how-it-works" element={<Navigate to="/services" replace />} />
@@ -103,7 +115,7 @@ export const App: React.FC = () => {
             <Route
               path="/patient/dashboard"
               element={
-                <ProtectedRoute allowedRoles={['patient', 'doctor', 'admin']}>
+                <ProtectedRoute allowedRoles={['patient', 'super_admin', 'admin']}>
                   <PatientDashboard />
                 </ProtectedRoute>
               }
@@ -111,7 +123,7 @@ export const App: React.FC = () => {
             <Route
               path="/patient/ai-navigation"
               element={
-                <ProtectedRoute allowedRoles={['patient', 'doctor', 'admin']}>
+                <ProtectedRoute allowedRoles={['patient', 'super_admin', 'admin']}>
                   <AiNavigationPage />
                 </ProtectedRoute>
               }
@@ -119,7 +131,7 @@ export const App: React.FC = () => {
             <Route
               path="/patient/doctors"
               element={
-                <ProtectedRoute allowedRoles={['patient', 'doctor', 'admin']}>
+                <ProtectedRoute allowedRoles={['patient', 'doctor', 'receptionist', 'hospital_admin', 'super_admin', 'admin']}>
                   <DoctorDiscoveryPage />
                 </ProtectedRoute>
               }
@@ -127,7 +139,7 @@ export const App: React.FC = () => {
             <Route
               path="/patient/saved-doctors"
               element={
-                <ProtectedRoute allowedRoles={['patient', 'doctor', 'admin']}>
+                <ProtectedRoute allowedRoles={['patient', 'super_admin', 'admin']}>
                   <SavedDoctorsPage />
                 </ProtectedRoute>
               }
@@ -135,7 +147,7 @@ export const App: React.FC = () => {
             <Route
               path="/patient/appointments"
               element={
-                <ProtectedRoute allowedRoles={['patient', 'doctor', 'admin']}>
+                <ProtectedRoute allowedRoles={['patient', 'super_admin', 'admin']}>
                   <AppointmentsPage />
                 </ProtectedRoute>
               }
@@ -143,7 +155,7 @@ export const App: React.FC = () => {
             <Route
               path="/patient/queue"
               element={
-                <ProtectedRoute allowedRoles={['patient', 'doctor', 'admin']}>
+                <ProtectedRoute allowedRoles={['patient', 'super_admin', 'admin']}>
                   <QueueTrackerPage />
                 </ProtectedRoute>
               }
@@ -151,7 +163,7 @@ export const App: React.FC = () => {
             <Route
               path="/patient/reports"
               element={
-                <ProtectedRoute allowedRoles={['patient', 'doctor', 'admin']}>
+                <ProtectedRoute allowedRoles={['patient', 'super_admin', 'admin']}>
                   <ReportsPage />
                 </ProtectedRoute>
               }
@@ -159,7 +171,7 @@ export const App: React.FC = () => {
             <Route
               path="/patient/family"
               element={
-                <ProtectedRoute allowedRoles={['patient', 'doctor', 'admin']}>
+                <ProtectedRoute allowedRoles={['patient', 'super_admin', 'admin']}>
                   <FamilyProfilesPage />
                 </ProtectedRoute>
               }
@@ -167,7 +179,7 @@ export const App: React.FC = () => {
             <Route
               path="/patient/timeline"
               element={
-                <ProtectedRoute allowedRoles={['patient', 'doctor', 'admin']}>
+                <ProtectedRoute allowedRoles={['patient', 'super_admin', 'admin']}>
                   <HealthTimelinePage />
                 </ProtectedRoute>
               }
@@ -175,7 +187,7 @@ export const App: React.FC = () => {
             <Route
               path="/patient/prescriptions"
               element={
-                <ProtectedRoute allowedRoles={['patient', 'doctor', 'admin']}>
+                <ProtectedRoute allowedRoles={['patient', 'super_admin', 'admin']}>
                   <PrescriptionsPage />
                 </ProtectedRoute>
               }
@@ -183,7 +195,7 @@ export const App: React.FC = () => {
             <Route
               path="/patient/passport"
               element={
-                <ProtectedRoute allowedRoles={['patient', 'doctor', 'admin']}>
+                <ProtectedRoute allowedRoles={['patient', 'super_admin', 'admin']}>
                   <CarePassportPage />
                 </ProtectedRoute>
               }
@@ -193,7 +205,7 @@ export const App: React.FC = () => {
             <Route
               path="/doctor/dashboard"
               element={
-                <ProtectedRoute allowedRoles={['doctor', 'admin']}>
+                <ProtectedRoute allowedRoles={['doctor', 'super_admin', 'admin']}>
                   <DoctorDashboard />
                 </ProtectedRoute>
               }
@@ -201,7 +213,7 @@ export const App: React.FC = () => {
             <Route
               path="/doctor/queue"
               element={
-                <ProtectedRoute allowedRoles={['doctor', 'admin']}>
+                <ProtectedRoute allowedRoles={['doctor', 'super_admin', 'admin']}>
                   <DoctorDashboard />
                 </ProtectedRoute>
               }
@@ -209,17 +221,37 @@ export const App: React.FC = () => {
             <Route
               path="/doctor/schedule"
               element={
-                <ProtectedRoute allowedRoles={['doctor', 'admin']}>
+                <ProtectedRoute allowedRoles={['doctor', 'super_admin', 'admin']}>
                   <DoctorSchedulePage />
                 </ProtectedRoute>
               }
             />
 
-            {/* Admin Workflow */}
+            {/* Receptionist Workflow */}
+            <Route
+              path="/receptionist/dashboard"
+              element={
+                <ProtectedRoute allowedRoles={['receptionist', 'super_admin', 'admin']}>
+                  <ReceptionistDashboard />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Hospital Admin Workflow */}
+            <Route
+              path="/hospital-admin/dashboard"
+              element={
+                <ProtectedRoute allowedRoles={['hospital_admin', 'super_admin', 'admin']}>
+                  <HospitalAdminDashboard />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Super Admin Workflow */}
             <Route
               path="/admin/dashboard"
               element={
-                <ProtectedRoute allowedRoles={['admin']}>
+                <ProtectedRoute allowedRoles={['super_admin', 'admin']}>
                   <AdminDashboard />
                 </ProtectedRoute>
               }
@@ -227,7 +259,7 @@ export const App: React.FC = () => {
             <Route
               path="/admin/analytics"
               element={
-                <ProtectedRoute allowedRoles={['admin']}>
+                <ProtectedRoute allowedRoles={['super_admin', 'admin']}>
                   <AdminAnalyticsPage />
                 </ProtectedRoute>
               }
@@ -235,7 +267,7 @@ export const App: React.FC = () => {
             <Route
               path="/admin/departments"
               element={
-                <ProtectedRoute allowedRoles={['admin']}>
+                <ProtectedRoute allowedRoles={['super_admin', 'admin']}>
                   <AdminDepartmentsPage />
                 </ProtectedRoute>
               }
@@ -243,7 +275,7 @@ export const App: React.FC = () => {
             <Route
               path="/admin/doctors"
               element={
-                <ProtectedRoute allowedRoles={['admin']}>
+                <ProtectedRoute allowedRoles={['super_admin', 'admin']}>
                   <AdminDoctorsPage />
                 </ProtectedRoute>
               }
@@ -251,7 +283,7 @@ export const App: React.FC = () => {
             <Route
               path="/admin/approvals"
               element={
-                <ProtectedRoute allowedRoles={['admin']}>
+                <ProtectedRoute allowedRoles={['super_admin', 'admin']}>
                   <AdminDoctorApprovalsPage />
                 </ProtectedRoute>
               }
@@ -259,7 +291,7 @@ export const App: React.FC = () => {
             <Route
               path="/admin/appointments"
               element={
-                <ProtectedRoute allowedRoles={['admin']}>
+                <ProtectedRoute allowedRoles={['super_admin', 'admin']}>
                   <AdminAppointmentsPage />
                 </ProtectedRoute>
               }

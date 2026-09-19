@@ -1,0 +1,195 @@
+{
+  "matrix": {
+    "AUTHENTICATION": "PASS",
+    "RBAC": "PASS",
+    "RLS": "PASS",
+    "MIGRATIONS": "PASS",
+    "HOSPITAL_SCOPING": "PASS",
+    "DATA_ISOLATION": "PASS",
+    "DASHBOARD_PROTECTION": "PASS",
+    "FORGOT_PASSWORD": "PASS",
+    "BUILD": "PASS"
+  },
+  "results": [
+    {
+      "category": "MIGRATIONS",
+      "testName": "Migration Files Exist",
+      "passed": true,
+      "detail": "Found 01: true, 02: true, 03: true, combined: true"
+    },
+    {
+      "category": "RBAC",
+      "testName": "5 Canonical Roles Defined in SQL",
+      "passed": true,
+      "detail": "patient, doctor, receptionist, hospital_admin, super_admin"
+    },
+    {
+      "category": "HOSPITAL_SCOPING",
+      "testName": "Hospital FK Scoping on Profiles",
+      "passed": true,
+      "detail": "hospital_id UUID REFERENCES public.hospitals(id)"
+    },
+    {
+      "category": "AUTHENTICATION",
+      "testName": "Trigger Enforces Patient Role on Sign-Up",
+      "passed": true,
+      "detail": "handle_new_user() defaults to patient"
+    },
+    {
+      "category": "RBAC",
+      "testName": "Anti-Privilege Escalation Trigger",
+      "passed": true,
+      "detail": "prevent_profile_role_escalation prevents unauthorized role alteration"
+    },
+    {
+      "category": "RLS",
+      "testName": "RLS Enabled on All Private Health Tables",
+      "passed": true,
+      "detail": "profiles, appointments, queues, prescriptions, medical_documents"
+    },
+    {
+      "category": "RLS",
+      "testName": "Security Definer Auth Helper Functions",
+      "passed": true,
+      "detail": "auth_user_role(), auth_user_hospital_id(), is_super_admin()"
+    },
+    {
+      "category": "HOSPITAL_SCOPING",
+      "testName": "Hospital Scoping RLS Policies",
+      "passed": true,
+      "detail": "receptionist & hospital_admin locked to auth_user_hospital_id()"
+    },
+    {
+      "category": "DATA_ISOLATION",
+      "testName": "Patient Data Isolation RLS Policy",
+      "passed": true,
+      "detail": "patient_id = auth.uid()"
+    },
+    {
+      "category": "DASHBOARD_PROTECTION",
+      "testName": "Logged-Out Guard: /dashboard (shortcut)",
+      "passed": true,
+      "detail": "Redirected to /login: true | Flash message shown: true"
+    },
+    {
+      "category": "DASHBOARD_PROTECTION",
+      "testName": "Logged-Out Guard: /patient-dashboard (alias)",
+      "passed": true,
+      "detail": "Redirected to /login: true | Flash message shown: true"
+    },
+    {
+      "category": "DASHBOARD_PROTECTION",
+      "testName": "Logged-Out Guard: /patient/dashboard",
+      "passed": true,
+      "detail": "Redirected to /login: true | Flash message shown: true"
+    },
+    {
+      "category": "DASHBOARD_PROTECTION",
+      "testName": "Logged-Out Guard: /doctor-dashboard (alias)",
+      "passed": true,
+      "detail": "Redirected to /login: true | Flash message shown: true"
+    },
+    {
+      "category": "DASHBOARD_PROTECTION",
+      "testName": "Logged-Out Guard: /doctor/dashboard",
+      "passed": true,
+      "detail": "Redirected to /login: true | Flash message shown: true"
+    },
+    {
+      "category": "DASHBOARD_PROTECTION",
+      "testName": "Logged-Out Guard: /receptionist-dashboard (alias)",
+      "passed": true,
+      "detail": "Redirected to /login: true | Flash message shown: true"
+    },
+    {
+      "category": "DASHBOARD_PROTECTION",
+      "testName": "Logged-Out Guard: /receptionist/dashboard",
+      "passed": true,
+      "detail": "Redirected to /login: true | Flash message shown: true"
+    },
+    {
+      "category": "DASHBOARD_PROTECTION",
+      "testName": "Logged-Out Guard: /hospital-admin-dashboard (alias)",
+      "passed": true,
+      "detail": "Redirected to /login: true | Flash message shown: true"
+    },
+    {
+      "category": "DASHBOARD_PROTECTION",
+      "testName": "Logged-Out Guard: /hospital-admin/dashboard",
+      "passed": true,
+      "detail": "Redirected to /login: true | Flash message shown: true"
+    },
+    {
+      "category": "DASHBOARD_PROTECTION",
+      "testName": "Logged-Out Guard: /admin-dashboard (alias)",
+      "passed": true,
+      "detail": "Redirected to /login: true | Flash message shown: true"
+    },
+    {
+      "category": "DASHBOARD_PROTECTION",
+      "testName": "Logged-Out Guard: /admin/dashboard",
+      "passed": true,
+      "detail": "Redirected to /login: true | Flash message shown: true"
+    },
+    {
+      "category": "AUTHENTICATION",
+      "testName": "Public Registration Restricted to Patients Only",
+      "passed": true,
+      "detail": "Patient Notice: true | Doctor Toggle Absent: true | Submit: Complete Patient Registration"
+    },
+    {
+      "category": "RBAC",
+      "testName": "Patient Access Own Dashboard",
+      "passed": true,
+      "detail": "Landed on: /patient/dashboard"
+    },
+    {
+      "category": "RBAC",
+      "testName": "Patient Blocked from Doctor Dashboard",
+      "passed": true,
+      "detail": "Redirected to: /unauthorized"
+    },
+    {
+      "category": "RBAC",
+      "testName": "Patient Blocked from Hospital Admin Dashboard",
+      "passed": true,
+      "detail": "Redirected to: /unauthorized"
+    },
+    {
+      "category": "RBAC",
+      "testName": "Patient Blocked from Super Admin Dashboard",
+      "passed": true,
+      "detail": "Redirected to: /unauthorized"
+    },
+    {
+      "category": "RBAC",
+      "testName": "403 Unauthorized Forbidden Page Display",
+      "passed": true,
+      "detail": "Renders 403 Access Forbidden badge and explanation"
+    },
+    {
+      "category": "HOSPITAL_SCOPING",
+      "testName": "Receptionist Access Assigned Hospital Desk",
+      "passed": true,
+      "detail": "Landed on: /receptionist/dashboard"
+    },
+    {
+      "category": "HOSPITAL_SCOPING",
+      "testName": "Receptionist Blocked from Super Admin Portal",
+      "passed": true,
+      "detail": "Redirected to: /unauthorized"
+    },
+    {
+      "category": "FORGOT_PASSWORD",
+      "testName": "Forgot Password UI & Supabase Integration",
+      "passed": true,
+      "detail": "Renders password recovery form calling Supabase Auth"
+    },
+    {
+      "category": "AUTHENTICATION",
+      "testName": "Supabase Auth Remote Service Reachable",
+      "passed": true,
+      "detail": "Session status: Ready"
+    }
+  ]
+}

@@ -36,7 +36,7 @@ interface SidebarLink {
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
-  const { role, switchDemoRole } = useAuth();
+  const { role } = useAuth();
 
   const patientLinks: SidebarLink[] = [
     { to: '/patient/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -58,6 +58,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     { to: '/doctor/schedule', label: 'Schedule & Slots', icon: CalendarDays },
   ];
 
+  const receptionistLinks: SidebarLink[] = [
+    { to: '/receptionist/dashboard', label: 'Reception Desk', icon: LayoutDashboard },
+    { to: '/patient/doctors', label: 'Specialist Directory', icon: Search },
+  ];
+
+  const hospitalAdminLinks: SidebarLink[] = [
+    { to: '/hospital-admin/dashboard', label: 'Hospital Hub', icon: LayoutDashboard },
+    { to: '/admin/doctors', label: 'Medical Roster', icon: Users2 },
+    { to: '/admin/departments', label: 'Departments', icon: Building2 },
+    { to: '/admin/appointments', label: 'Appointments', icon: SlidersHorizontal },
+  ];
+
   const adminLinks: SidebarLink[] = [
     { to: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { to: '/admin/analytics', label: 'Hospital Analytics', icon: BarChart3, highlight: true },
@@ -67,7 +79,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     { to: '/admin/appointments', label: 'All Appointments', icon: SlidersHorizontal },
   ];
 
-  const currentLinks = role === 'admin' ? adminLinks : role === 'doctor' ? doctorLinks : patientLinks;
+  const currentLinks = 
+    (role === 'admin' || role === 'super_admin') ? adminLinks :
+    role === 'doctor' ? doctorLinks :
+    role === 'receptionist' ? receptionistLinks :
+    role === 'hospital_admin' ? hospitalAdminLinks :
+    patientLinks;
 
   return (
     <>
@@ -153,37 +170,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             );
           })}
         </nav>
-
-        {/* Mobile Quick Role Switcher */}
-        <div className="p-4 border-t border-slate-100 md:hidden bg-slate-50/50">
-          <p className="text-[11px] font-bold uppercase text-slate-400 tracking-wider mb-2">Switch Demo Role</p>
-          <div className="grid grid-cols-3 gap-1.5">
-            <button
-              onClick={() => { switchDemoRole('patient'); onClose(); }}
-              className={`p-1.5 text-center text-xs font-semibold rounded-lg border ${
-                role === 'patient' ? 'bg-white border-teal-500 text-teal-700 shadow-xs' : 'border-slate-200 text-slate-600'
-              }`}
-            >
-              Patient
-            </button>
-            <button
-              onClick={() => { switchDemoRole('doctor'); onClose(); }}
-              className={`p-1.5 text-center text-xs font-semibold rounded-lg border ${
-                role === 'doctor' ? 'bg-white border-blue-500 text-blue-700 shadow-xs' : 'border-slate-200 text-slate-600'
-              }`}
-            >
-              Doctor
-            </button>
-            <button
-              onClick={() => { switchDemoRole('admin'); onClose(); }}
-              className={`p-1.5 text-center text-xs font-semibold rounded-lg border ${
-                role === 'admin' ? 'bg-white border-purple-500 text-purple-700 shadow-xs' : 'border-slate-200 text-slate-600'
-              }`}
-            >
-              Admin
-            </button>
-          </div>
-        </div>
 
         {/* Safety Footer note */}
         <div className="p-4 border-t border-slate-100 bg-slate-50/30">

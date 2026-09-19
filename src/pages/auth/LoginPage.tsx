@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 
 export const LoginPage: React.FC = () => {
-  const { user, role, signIn, switchDemoRole } = useAuth();
+  const { user, role, signIn } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const redirectMessage = (location.state as any)?.message;
@@ -29,11 +29,13 @@ export const LoginPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // If already authenticated, redirect to appropriate portal
+  // If already authenticated, redirect to appropriate role portal
   useEffect(() => {
     if (user) {
       if (role === 'doctor') navigate('/doctor/dashboard', { replace: true });
-      else if (role === 'admin') navigate('/admin/dashboard', { replace: true });
+      else if (role === 'receptionist') navigate('/receptionist/dashboard', { replace: true });
+      else if (role === 'hospital_admin') navigate('/hospital-admin/dashboard', { replace: true });
+      else if (role === 'super_admin' || role === 'admin') navigate('/admin/dashboard', { replace: true });
       else navigate('/patient/dashboard', { replace: true });
     }
   }, [user, role, navigate]);
@@ -44,6 +46,10 @@ export const LoginPage: React.FC = () => {
       setError('Please enter your email address.');
       return;
     }
+    if (!password) {
+      setError('Please enter your password.');
+      return;
+    }
     setError(null);
     setIsSubmitting(true);
     try {
@@ -51,9 +57,9 @@ export const LoginPage: React.FC = () => {
     } catch (err: any) {
       const msg = err?.message || '';
       if (msg.includes('Invalid login credentials') || msg.includes('invalid_grant')) {
-        setError('Incorrect email or password. Please verify your details or use instant demo access.');
+        setError('Incorrect email or password. Please verify your credentials.');
       } else if (msg.includes('Email not confirmed')) {
-        setError('Your email is pending verification. You may also use the instant demo buttons above.');
+        setError('Email not yet confirmed. Please verify your email via the confirmation link sent by Supabase.');
       } else {
         setError(msg || 'Unable to sign in. Please verify your healthcare login credentials.');
       }
@@ -62,11 +68,18 @@ export const LoginPage: React.FC = () => {
     }
   };
 
-  const handleQuickLogin = (targetRole: 'patient' | 'doctor' | 'admin') => {
-    switchDemoRole(targetRole);
-    if (targetRole === 'doctor') navigate('/doctor/dashboard');
-    else if (targetRole === 'admin') navigate('/admin/dashboard');
-    else navigate('/patient/dashboard');
+  const handleFillCredentials = (targetRole: 'patient' | 'doctor' | 'admin') => {
+    setError(null);
+    if (targetRole === 'patient') {
+      setEmail('patient.ahmed@careflow.ai');
+      setPassword('password123');
+    } else if (targetRole === 'doctor') {
+      setEmail('dr.sarah.farooq@careflow.ai');
+      setPassword('password123');
+    } else if (targetRole === 'admin') {
+      setEmail('admin.kamran@careflow.ai');
+      setPassword('password123');
+    }
   };
 
   return (
@@ -163,21 +176,21 @@ export const LoginPage: React.FC = () => {
             </div>
           )}
 
-          {/* Quick Demo Access Bar (Flagship for Hackathon Evaluators) */}
+          {/* Quick Demo Credentials Autofill */}
           <div className="p-4 rounded-2xl bg-teal-50/70 border border-teal-200/80 space-y-2.5">
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-bold text-teal-900 uppercase tracking-wider flex items-center gap-1.5">
                 <Sparkles className="w-3.5 h-3.5 text-teal-600" />
-                Instant Demo Access (One-Click)
+                Demo Evaluation Accounts
               </span>
               <span className="text-[10px] text-teal-700 font-semibold bg-teal-100 px-2 py-0.5 rounded">
-                Pre-Configured
+                Click to Fill
               </span>
             </div>
             <div className="grid grid-cols-3 gap-2">
               <button
                 type="button"
-                onClick={() => handleQuickLogin('patient')}
+                onClick={() => handleFillCredentials('patient')}
                 className="p-2.5 bg-white hover:bg-teal-600 text-teal-900 hover:text-white rounded-xl border border-teal-200 text-xs font-bold transition-all flex flex-col items-center gap-1 shadow-2xs group cursor-pointer"
               >
                 <UserCheck className="w-4 h-4 text-teal-600 group-hover:text-white" />
@@ -185,7 +198,7 @@ export const LoginPage: React.FC = () => {
               </button>
               <button
                 type="button"
-                onClick={() => handleQuickLogin('doctor')}
+                onClick={() => handleFillCredentials('doctor')}
                 className="p-2.5 bg-white hover:bg-teal-600 text-teal-900 hover:text-white rounded-xl border border-teal-200 text-xs font-bold transition-all flex flex-col items-center gap-1 shadow-2xs group cursor-pointer"
               >
                 <Stethoscope className="w-4 h-4 text-blue-600 group-hover:text-white" />
@@ -193,7 +206,7 @@ export const LoginPage: React.FC = () => {
               </button>
               <button
                 type="button"
-                onClick={() => handleQuickLogin('admin')}
+                onClick={() => handleFillCredentials('admin')}
                 className="p-2.5 bg-white hover:bg-teal-600 text-teal-900 hover:text-white rounded-xl border border-teal-200 text-xs font-bold transition-all flex flex-col items-center gap-1 shadow-2xs group cursor-pointer"
               >
                 <ShieldCheck className="w-4 h-4 text-purple-600 group-hover:text-white" />
@@ -281,28 +294,13 @@ export const LoginPage: React.FC = () => {
               {isSubmitting ? 'Signing in...' : 'Sign In to Account'}
               <ArrowRight className="w-4 h-4" />
             </button>
-
-            {/* Google OAuth Button */}
-            <button
-              type="button"
-              onClick={() => handleQuickLogin('patient')}
-              className="w-full py-2.5 px-4 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-xl transition-colors flex items-center justify-center gap-2 cursor-pointer"
-            >
-              <svg className="w-4 h-4" viewBox="0 0 24 24">
-                <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
-                <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"/>
-                <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.99 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/>
-                <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
-              </svg>
-              <span>Continue with Google</span>
-            </button>
           </form>
 
           <div className="text-center pt-2">
             <p className="text-xs text-slate-500">
               Don't have an account yet?{' '}
               <Link to="/register" className="font-bold text-teal-600 hover:text-teal-700">
-                Register as Patient or Doctor
+                Register as a Patient
               </Link>
             </p>
           </div>
